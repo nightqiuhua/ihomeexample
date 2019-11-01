@@ -60,7 +60,6 @@ $(document).ready(function(){
             url:"/api/v1.0/houses/image",
             type:"post",
             dataType:"json",
-            contentType:"",
             headers:{
                 "X-CSRFToken":getCookie("csrf_token")
             },

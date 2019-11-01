@@ -22,3 +22,9 @@ QINIU_URL_DOMAIN = "http://pztnjwcqu.bkt.clouddn.com/"
 
 # 城区信息的缓存时间, 单位：秒
 AREA_INFO_REDIS_CACHE_EXPIRES = 7200
+
+#首页展示最多的房屋数量
+HOME_PAGE_MAX_HOSUE = 5
+
+# 首页房屋数据的Redis缓存时间，单位：秒
+HOME_PAGE_DATA_REDIS_EXPIRES = 7200
