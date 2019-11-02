@@ -146,6 +146,47 @@ class House(BaseModel, db.Model):
         }
         return hosue_dict
 
+    def to_full_dict(self):
+        """将详细信息转换为字典数据"""
+        house_dict = {
+            "hid":self.id,
+            "user_id":self.user_id,
+            "user_name":self.user_name,
+            "user_avatar":constants.QINIU_URL_DOMAIN + self.user.avatar_url if self.user.avatar_url else "",
+            "title":self.title,
+            "price":self.price,
+            "address":self.address,
+            "room_count":self.room_count,
+            "acreage":self.acreage,
+            "unit":self.unit,
+            "capacity":self.capacity,
+            "beds":self.beds,
+            "deposit":self.deposit,
+            "min_day":self.min_days,
+            "max_day":self.max_days,
+        }
+
+        #房屋图片
+        img_urls = [constants.QINIU_URL_DOMAIN+image.url for image in self.images]
+        house_dict["img_urls"] = img_urls
+        #房屋设施
+        facilities = [facility.id for facility in self.facilities]
+        house_dict["facilities"] = facilities
+
+        # 评论信息
+        comments = []
+        orders = Order.query.filter(Order.house_id == self.id, Order.status == "COMPLETE", Order.comment != None)\
+            .order_by(Order.update_time.desc()).limit(constants.HOUSE_DETAIL_COMMENT_DISPLAY_COUNTS)
+        for order in orders:
+            comment = {
+                "comment": order.comment,  # 评论的内容
+                "user_name": order.user.name if order.user.name != order.user.mobile else "匿名用户",  # 发表评论的用户
+                "ctime": order.update_time.strftime("%Y-%m-%d %H:%M:%S")  # 评价的时间
+            }
+            comments.append(comment)
+        house_dict["comments"] = comments
+        return house_dict
+
 
 class Facility(BaseModel, db.Model):
     """设施信息"""

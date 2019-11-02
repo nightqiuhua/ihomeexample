@@ -275,4 +275,58 @@ def get_house_index():
         current_app.logger.error(e)
     return '{"errno":0, "errmsg":"OK", "data":%s}' % json_houses, 200, {"Content-Type": "application/json"}
     
+@api.route("/houses/<int:house_id>",methods=["GET"])
+def get_house_detail(house_id):
+    """获取房屋详情"""
+    # 前端在房屋详情页面展示时，如果浏览页面的用户不是该房屋的房东，则展示预定按钮，否则不展示
+    # 所以需要返回登录用户的user_id
 
+    #获取参数
+    # 尝试获取用户登录的信息，若登录，则返回给前端登录用户的user_id，否则返回user_id = -1
+    user_id = session.get("user_id",-1)
+
+
+    #校验参数
+    if not hosue_id:
+        return jsonify(errno=RET.PARAMERR,errmsg="参数缺失")
+
+    #业务逻辑
+    # 先从redis缓存中获取信息
+    try:
+        ret = redis_store.get("house_info_{}".format(house_id))
+    except Exception as e:
+        current_app.logger.error(e)
+        ret = None
+    if ret:
+        current_app.logger.info("hit hosue for redis")
+        return '{"errno":"0","errmsg":"OK","data":{"user_id":%s,"house":%s}}' % (user_id,ret),200,{"content-Type":"application/json"}
+    # 查询数据库
+
+    try:
+        house = House.query.get(house_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="查询数据失败")
+
+    if not house:
+        return jsonify(errno=RET.NODATA,errmsg="房屋不存在")
+
+    # 将房屋对象数据转换字典
+    try:
+        house_data = house.to_full_dict()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DATAERR,errmsg="数据出错")
+
+    # 存入redis中
+    json_house = json.dumps(house_data)
+    try:
+        redis_store.setex("house_info_{}".format(house_id),constants.HOUSE_DETAIL_REDIS_EXPIRE_SECOND,house_data)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    resp = '{"errno":"0", "errmsg":"OK", "data":{"user_id":%s, "house":%s}}' % (user_id, json_house), \
+           200, {"Content-Type": "application/json"}
+
+    #返回数据
+    return resp

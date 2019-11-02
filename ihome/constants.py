@@ -28,3 +28,9 @@ HOME_PAGE_MAX_HOSUE = 5
 
 # 首页房屋数据的Redis缓存时间，单位：秒
 HOME_PAGE_DATA_REDIS_EXPIRES = 7200
+
+# 房屋详情页面数据Redis缓存时间，单位：秒
+HOUSE_DETAIL_REDIS_EXPIRE_SECOND = 7200
+
+# 房屋详情页展示的评论最大数
+HOUSE_DETAIL_COMMENT_DISPLAY_COUNTS = 30
