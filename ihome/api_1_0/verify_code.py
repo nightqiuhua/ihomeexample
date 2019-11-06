@@ -7,6 +7,7 @@ from flask import make_response,jsonify,current_app,request
 from ihome import constants,redis_store,db
 from ihome.utils.response_code import RET
 from ihome.models import User
+from ihome.tasks.sms.tasks import send_sms
 import json
 
 import random
@@ -108,19 +109,24 @@ def get_sms_code(mobile):
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR,errmsg="保存短信验证码异常")
     #发送短信
-    ccp = CCP()
-    try:
-        result = ccp.send_template_sms(mobile,sms_code,str(int(constants.SMS_CODE_REDIS_EXPIRES/60)),1)
-    except Exception as e:
-        current_app.logger.error(e)
-        return jsonify(errno=RET.THIRDERR,errmsg="发送异常")
+    #ccp = CCP()
+    #try:
+    #    result = ccp.send_template_sms(mobile,sms_code,str(int(constants.SMS_CODE_REDIS_EXPIRES/60)),1)
+    #except Exception as e:
+    #    current_app.logger.error(e)
+    #    return jsonify(errno=RET.THIRDERR,errmsg="发送异常")
     
-    if result == 0:
-        #表示发送成功
-        return jsonify(errno=RET.OK,errmsg="短信验证码发送成功")
-    else:
-        #发送不成功
-        return jsonifg(errno=RET.THIRDERR,errmsg="发送失败")
+    #if result == 0:
+    #    #表示发送成功
+    #    return jsonify(errno=RET.OK,errmsg="短信验证码发送成功")
+    #else:
+    #    #发送不成功
+    #    return jsonifg(errno=RET.THIRDERR,errmsg="发送失败")
+    #返回异步任务对象
+    result_obj = send_sms.delay(mobile,sms_code,str(int(constants.SMS_CODE_REDIS_EXPIRES/60)),1)
+    print(result_obj.id)
+
     #返回值
+    return jsonify(errno=RET.OK,errmsg="发送成功")
 
 
