@@ -28,7 +28,7 @@ $(document).ready(function(){
         data.facility = facility
         //向后端发送请求
         $.ajax({
-            url:"/api/v1.0/house/info",
+            url:"/api/v1.0/houses/info",
             type:"post",
             contentType:"application/json",
             data:JSON.stringify(data),
@@ -46,11 +46,11 @@ $(document).ready(function(){
                     //显示图片表单
                     $("#form-house-image").show()
                     //设置图片表单中的house_id
-                    $("house-id").val(resp.data.house_id);
+                    $("#house-id").val(resp.data.house_id);
                 } else {
-                     alert(errmsg)
+                     alert(resp.errmsg);
                 }
-            };
+            }
         })
 
     })

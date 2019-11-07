@@ -22,17 +22,15 @@
             </div>
         </div>
         <div class="swiper-container">
-        <script>
+        <script id="house-image-tmpl" type="text/html">
             <ul class="swiper-wrapper">
-            {{each img_urls as img_url}}
-                  <li class="swiper-slide"><img src="{{img_url}}"></li>
-            {{/eacj}}
-                
+                {{each img_urls as img_url}}
+                <li class="swiper-slide"><img src="{{img_url}}"></li>
+                {{/each}}
             </ul>
             <div class="swiper-pagination"></div>
             <div class="house-price">￥<span>{{(price/100.0).toFixed(0)}}</span>/晚</div>
         </script>
-
         </div>
         <div class="detail-con">
         <script id="house-detail-tmpl" type="text/html">

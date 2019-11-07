@@ -1,7 +1,7 @@
 # coding:utf-8
 
 from ihome.tasks.main import celery_app 
-from ihome.libs.yuntongxun import CCP
+from ihome.libs.yuntongxun.sms import CCP
 
 @celery_app.task 
 def send_sms(to, datas,atime, temp_id):

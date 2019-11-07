@@ -89,7 +89,7 @@ def save_order():
     return jsonify(errno=RET.OK,errmsg="Ok",data={"order_id":order.id})
 
 
-@api.route("/user/orders",methods=[GET])
+@api.route("/user/orders",methods=["GET"])
 @login_required
 def get_user_orders():
     """查询用户的订单信息"""

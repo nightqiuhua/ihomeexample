@@ -1,11 +1,11 @@
 #coding:utf-8
 
 from . import api 
-from flask import current_app,request,jsonify
+from flask import current_app,request,jsonify,g,session
 from ihome.utils.response_code import RET
 from ihome.utils.commons import login_required
 from ihome.utils.image_storage import storage
-from ihome.models import Area,House,Facility,HouseImage,Order
+from ihome.models import Area,House,Facility,HouseImage,Order,User
 from ihome import db,redis_store,constants
 import json
 
@@ -137,7 +137,7 @@ def save_house_info():
     # 如果用户勾选了设施信息，再保存数据库
     if facility_ids:
         try:
-            facilities = Facility.query.filter(Facility.id.in_(facility_ids))
+            facilities = Facility.query.filter(Facility.id.in_(facility_ids)).all()
         except Exception as e:
             current_app.logger.error(e)
             return jsonify(errno=RET.DBERR,errmsg="数据库异常")
@@ -146,7 +146,6 @@ def save_house_info():
             #表示有合法的设施数据
             #保存数据
             house.facilities = facilities
-
     try:
         db.session.add(house)
         db.session.commit()
@@ -159,13 +158,13 @@ def save_house_info():
     return jsonify(errno=RET.OK,errmsg="OK",data={"house_id":house.id})
 
 
-@api.route("/house/image",methods=["POST"])
+@api.route("/houses/image",methods=["POST"])
 @login_required
 def save_house_image():
     """保存房屋图片
     参数  图片 房屋的id
     """
-    image_file = request.file.get("house_image")
+    image_file = request.files.get("house_image")
     house_id = request.form.get("house_id")
 
     if not all([image_file,house_id]):
@@ -225,7 +224,7 @@ def get_usr_houses():
         return jsonify(errno=RET.DBERR,errmsg="获取数据失败")
 
     # 将查询到的房屋信息转换为字典存放到列表中
-
+    houses_list = []
     if houses:
         houses_list = [house.to_basic_dict() for house in houses]
     return jsonify(errno=RET.OK,errmsg="OK",data={"houses":houses_list})
@@ -287,7 +286,7 @@ def get_house_detail(house_id):
 
 
     #校验参数
-    if not hosue_id:
+    if not house_id:
         return jsonify(errno=RET.PARAMERR,errmsg="参数缺失")
 
     #业务逻辑
@@ -298,8 +297,9 @@ def get_house_detail(house_id):
         current_app.logger.error(e)
         ret = None
     if ret:
-        current_app.logger.info("hit hosue for redis")
-        return '{"errno":"0","errmsg":"OK","data":{"user_id":%s,"house":%s}}' % (user_id,ret),200,{"content-Type":"application/json"}
+        ret = eval(ret)
+        current_app.logger.info("hit house for redis")
+        return '{"errno":"0","errmsg":"OK","data":{"user_id":%s,"house":%s}}' % (user_id,ret),200,{"Content-Type": "application/json"}
     # 查询数据库
 
     try:
@@ -357,7 +357,7 @@ def get_house_list():
             assert start_end <= end_date
     except Exception as e:
         current_app.logger.error(e)
-        return jsonify(errno=RET.PARAMERR,errmsg="日期参数错误)
+        return jsonify(errno=RET.PARAMERR,errmsg="日期参数错误")
 
     # 判断区域
     try:
@@ -408,7 +408,7 @@ def get_house_list():
 
     # 区域条件
     if area_id:
-        filter_params.append(House.area_id = area_id)
+        filter_params.append(House.area_id == area_id)
 
     
 
@@ -421,7 +421,7 @@ def get_house_list():
         house_query = House.query.filter(*filter_params).order_by(House.price.desc())
     elif sort_key == "price-inc":
         house_query = House.query.filter(*filter_params).order_by(House.price.asc())
-    else
+    else:
         house_query =House.query.filter(*filter_params).order_by(House.create_time.desc())
 
     # 处理分页

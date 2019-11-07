@@ -144,14 +144,14 @@ class House(BaseModel, db.Model):
             "user_avatar":constants.QINIU_URL_DOMAIN + self.user.avatar_url if self.user.avatar_url else "",
             "ctime":self.create_time.strftime("%Y-%m-%d")
         }
-        return hosue_dict
+        return house_dict
 
     def to_full_dict(self):
         """将详细信息转换为字典数据"""
         house_dict = {
             "hid":self.id,
             "user_id":self.user_id,
-            "user_name":self.user_name,
+            "user_name":self.user.name,
             "user_avatar":constants.QINIU_URL_DOMAIN + self.user.avatar_url if self.user.avatar_url else "",
             "title":self.title,
             "price":self.price,
@@ -169,8 +169,10 @@ class House(BaseModel, db.Model):
         #房屋图片
         img_urls = [constants.QINIU_URL_DOMAIN+image.url for image in self.images]
         house_dict["img_urls"] = img_urls
-        #房屋设施
-        facilities = [facility.id for facility in self.facilities]
+        # 房屋设施
+        facilities = []
+        for facility in self.facilities:
+            facilities.append(facility.id)
         house_dict["facilities"] = facilities
 
         # 评论信息
